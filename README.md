@@ -21,3 +21,5 @@ Charm Point - Ujico*/Snail's House
 Cosmo Funk - Ujico*/Snail's House
 
 Snail Chan Adventure - Ujico*/Snail's House
+
+Barracks Song - Castle Crashers
