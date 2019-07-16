@@ -11,3 +11,13 @@ Lich Queen NORTA, a half-undead machine, has been building a machine army for th
 
 ## Group
 Daniel Budziwojski, Shriniketh Narayana, Spencer Chang, Jeffrey Yang
+
+## Music Used
+
+Beautiful Dead - Danganronpa
+
+Charm Point - Ujico*/Snail's House
+
+Cosmo Funk - Ujico*/Snail's House
+
+Snail Chan Adventure - Ujico*/Snail's House
