@@ -37,7 +37,7 @@ namespace KaufmanTouhou
         {
             get { return !isPlaying; }
         }
-        public const float INTERVAL = 1500f;
+        public const float INTERVAL = 700f;
         public Queue<TextD> texts;
         private TextD currentText;
         private float timer, timer2, timer3;

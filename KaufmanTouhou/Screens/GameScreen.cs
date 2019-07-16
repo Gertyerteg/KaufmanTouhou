@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using KaufmanTouhou.Screens.Stages;
 using KaufmanTouhou.Sprites;
 using Microsoft.Xna.Framework;
@@ -22,33 +19,28 @@ namespace KaufmanTouhou.Screens
         private ContentManager Content;
         private Texture2D blank, playerTexture;
         private SpriteFont font;
-        private Player[] players;
-        private int playerCount;
+        public Player[] Players
+        {
+            get;
+            set;
+        }
+
+        public int PlayerCount;
         private Color spaceColor;
-        private Stage currentStage;
         private bool isPlaying;
+
+        public int StageNumber;
+
         public static Stage CurrentStage;
+
         /// <summary>
         /// Creates a new instance of the <c>GameScreen</c>.
         /// </summary>
         public GameScreen()
         {
             spaceColor = new Color(10, 10, 35);
-            //SetStage(0);
-            playerCount = 1;
             isPlaying = true;
         }
-
-        ///// <summary>
-        ///// Sets the stage of the game.
-        ///// </summary>
-        ///// <param name="stage"></param>
-        //public void SetStage(int stage)
-        //{
-        //    this.stage = stage;
-        //    stageTimer = 0f;
-            
-        //}
 
         /// <summary>
         /// Loads the content of the <c>GameScreen</c>.
@@ -56,37 +48,63 @@ namespace KaufmanTouhou.Screens
         /// <param name="Content"></param>
         public override void LoadContent(ContentManager Content)
         {
-
             base.LoadContent(Content);
             this.Content = new ContentManager(Content.ServiceProvider, "Content");
             ssb = new ScrollingStarBackground(this.Content);
             blank = this.Content.Load<Texture2D>("Blank");
             ScreenManager s = ScreenManager.GetInstance();
             playerTexture = this.Content.Load<Texture2D>("Player");
-            players = new Player[4];
             font = this.Content.Load<SpriteFont>("TransitionFont");
-            Texture2D pointerTexture = this.Content.Load<Texture2D>("Pointer");
 
-            List<SoundEffect> hurtEffects = new List<SoundEffect>();
-            hurtEffects.Add(Content.Load<SoundEffect>("Hit_Hurt"));
-            hurtEffects.Add(Content.Load<SoundEffect>("Hit_Hurt2"));
-            hurtEffects.Add(Content.Load<SoundEffect>("Hit_Hurt3"));
+            // comment out if you are initializing players through the player ready screen
+            //InitializePlayers();
+        }
 
-            for (int i = 0; i < playerCount; i++)
+        public void Initialize()
+        {
+            switch (StageNumber)
             {
-                players[i] = new Player((PlayerIndex)i, pointerTexture, blank, hurtEffects)
+                case -1:
+                    ChangeStage(new Prestage(Content, Players));
+                    break;
+                case 0:
+                    ChangeStage(new Stage0(Content, Players));
+                    break;
+                case 1:
+                    ChangeStage(new Stage1(Content, Players));
+                    break;
+                case 2:
+                    ChangeStage(new Stage2(Content, Players));
+                    break;
+            }
+        }
+
+        public void InitializePlayers()
+        {
+            ScreenManager s = ScreenManager.GetInstance();
+            Texture2D pointerTexture = Content.Load<Texture2D>("Pointer");
+            List<SoundEffect> hurtEffects = new List<SoundEffect>
+            {
+                Content.Load<SoundEffect>("Hit_Hurt"),
+                Content.Load<SoundEffect>("Hit_Hurt2"),
+                Content.Load<SoundEffect>("Hit_Hurt3")
+            };
+
+            for (int i = 0; i < PlayerCount; i++)
+            {
+                Players[i] = new Player((PlayerIndex)i, pointerTexture, blank, hurtEffects)
                 {
-                    shootSound = this.Content.Load<SoundEffect>("Laser_Shoot"),
-                    Position = new Vector2(s.Width / (playerCount + 1) * (i + 1), s.Height - 100),
+                    shootSound = Content.Load<SoundEffect>("Laser_Shoot"),
+                    Position = new Vector2(s.Width / (PlayerCount + 1) * (i + 1), s.Height - 100),
                     Velocity = Vector2.Zero,
                     Texture = playerTexture,
                     BulletTexture = blank,
-                    RocketTexture = this.Content.Load<Texture2D>("Missile"),
-                    rocketImpact = this.Content.Load<SoundEffect>("Rocket_Impact"),
-                    rocketLaunch = this.Content.Load<SoundEffect>("Rocket_Launch"),
+                    RocketTexture = Content.Load<Texture2D>("Missile"),
+                    rocketImpact = Content.Load<SoundEffect>("Rocket_Impact"),
+                    rocketLaunch = Content.Load<SoundEffect>("Rocket_Launch"),
+                    Explosion = Content.Load<Texture2D>("Explosion"),
                 };
             }
-            ChangeStage(new Stage0(this.Content, players));
         }
 
         /// <summary>
@@ -108,7 +126,7 @@ namespace KaufmanTouhou.Screens
             ssb.Update(gameTime);
 
             if (isPlaying)
-                currentStage.Update(gameTime);
+                CurrentStage.Update(gameTime);
 
             InputManager im = InputManager.Instance;
 
@@ -116,7 +134,7 @@ namespace KaufmanTouhou.Screens
             {
                 if (im.IsButtonPressed(Buttons.Start, i))
                 {
-                    currentStage.Pause();
+                    CurrentStage.Pause();
                     isPlaying = !isPlaying;
                     break;
                 }
@@ -125,10 +143,9 @@ namespace KaufmanTouhou.Screens
 
         public void ChangeStage(Stage stage)
         {
-            currentStage?.Unload();
-            currentStage = stage;
-            currentStage.Initialize();
-            CurrentStage = currentStage;
+            CurrentStage?.Unload();
+            CurrentStage = stage;
+            CurrentStage.Initialize();
         }
 
         /// <summary>
@@ -144,7 +161,7 @@ namespace KaufmanTouhou.Screens
                 SamplerState.PointWrap, null, null, null, null);
             ssb.Draw(spriteBatch);
 
-            currentStage.Draw(spriteBatch);
+            CurrentStage.Draw(spriteBatch);
 
             if (!isPlaying)
             {

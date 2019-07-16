@@ -23,20 +23,25 @@ namespace KaufmanTouhou.Sprites
             set;
         }
 
+        public Player[] Players
+        {
+            get { return players; }
+        }
+
+        public List<Bullet> Bullets
+        {
+            get { return CurrentStage.Bullets; }
+        }
+
         private Player[] players;
-        public List<Bullet> Bullets;
         /// <summary>
         /// Creates a new instance of the <c>Enemy</c>.
         /// </summary>
         public Enemy(Player[] players)
         {
+            
             this.players = players;
             IsActive = true;
-        }
-
-        public void SetBullets(List<Bullet> bullets)
-        {
-            this.Bullets = bullets;
         }
 
         public List<Bullet> getBullets()
@@ -68,10 +73,16 @@ namespace KaufmanTouhou.Sprites
 
         public float GetAngleBetweenSprite(Sprite sprite)
         {
-            return (float)Math.Atan2(sprite.Position.Y - Position.Y, sprite.Position.X - Position.X);
+            //return (float)Math.Atan2(sprite.Position.Y - Position.Y, sprite.Position.X - Position.X);
+            return GetAngleBetweenSprite(sprite, Position);
         }
 
-        public const float SAFE_MULT = 0.5f;
+        public float GetAngleBetweenSprite(Sprite sprite, Vector2 position)
+        {
+            return (float)Math.Atan2(sprite.Position.Y - position.Y, sprite.Position.X - position.X);
+        }
+
+        public const float SAFE_MULT = .8f;
         public void CheckBulletCollision()
         {
             for (int i = 0; i < Bullets.Count; i++)
@@ -79,8 +90,10 @@ namespace KaufmanTouhou.Sprites
                 Bullet b = Bullets[i];
                 if (!b.Side.Equals(EntitySide.ENEMY))
                 {
-                    float mag = (float)Math.Sqrt(Math.Pow(b.Size.X, 2) + Math.Pow(b.Size.Y, 2));
-                    float playerMag = (float)Math.Sqrt(Math.Pow(Size.X / 2, 2) + Math.Pow(Size.Y / 2, 2));
+                    //float mag = (float)Math.Sqrt(Math.Pow(b.Size.X, 2) + Math.Pow(b.Size.Y, 2));
+                    float mag = b.Size.ToVector2().Length() / 2;
+                    float playerMag = Size.ToVector2().Length() / 2;
+                    //float playerMag = (float)Math.Sqrt(Math.Pow(Size.X / 2, 2) + Math.Pow(Size.Y / 2, 2));
 
                     if (Vector2.Distance(b.Position, Position) < (mag + playerMag) * SAFE_MULT)
                     {
@@ -100,6 +113,7 @@ namespace KaufmanTouhou.Sprites
         public virtual void Update(GameTime gameTime)
         {
             CheckBulletCollision();
+
             if (Health <= 0)
                 IsActive = false;
         }

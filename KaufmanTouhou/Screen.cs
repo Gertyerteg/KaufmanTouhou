@@ -55,5 +55,7 @@ namespace KaufmanTouhou
     {
         GAME,
         MENU,
+        READY,
+        AFTER,
     }
 }

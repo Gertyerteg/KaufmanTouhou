@@ -30,6 +30,11 @@ namespace KaufmanTouhou
         }
         #endregion
 
+        /// <summary>
+        /// The current screen of the game.
+        /// </summary>
+        public Screen CurrentScreen { get; private set; }
+
         public int Width
         {
             get { return device.PreferredBackBufferWidth; }
@@ -41,14 +46,13 @@ namespace KaufmanTouhou
         }
 
         private GameWindow window;
-        private Screen currentScreen;
         private ContentManager Content;
         private GraphicsDeviceManager device;
 
         /// <summary>
         /// Special param.
         /// </summary>
-        public const bool DEV_MODE = true;
+        public const bool DEV_MODE = false;
 
         /// <summary>
         /// Creates a new instance of the <c>ScreenManager</c>.
@@ -58,10 +62,11 @@ namespace KaufmanTouhou
         }
 
         /// <summary>
-        /// Performs first time initialization on the <c>ScreenMnager</c>.
+        /// Performs first time initialization on the <c>ScreenManager</c>.
         /// </summary>
         /// <param name="Content"></param>
-        public void Initialize(ContentManager Content, GraphicsDeviceManager device, GameWindow window)
+        public void Initialize(ContentManager Content, 
+            GraphicsDeviceManager device, GameWindow window)
         {
             this.Content = new ContentManager(Content.ServiceProvider, "Content");
             this.device = device;
@@ -74,7 +79,7 @@ namespace KaufmanTouhou
                 ChangeScreenSize(1920, 1080);
                 SetFullScreen(true);
             }
-            ChangeScreen(ScreenState.GAME);
+            ChangeScreen(ScreenState.MENU);
         }
 
         /// <summary>
@@ -114,13 +119,20 @@ namespace KaufmanTouhou
             switch (state)
             {
                 case ScreenState.GAME:
-                    currentScreen = new GameScreen();
+                    CurrentScreen = new GameScreen();
                     break;
                 case ScreenState.MENU:
+                    CurrentScreen = new MenuScreen();
+                    break;
+                case ScreenState.READY:
+                    CurrentScreen = new PlayerReadyScreen();
+                    break;
+                case ScreenState.AFTER:
+                    CurrentScreen = new AfterScreen();
                     break;
             }
 
-            currentScreen.LoadContent(Content);
+            CurrentScreen.LoadContent(Content);
         }
 
         /// <summary>
@@ -128,7 +140,7 @@ namespace KaufmanTouhou
         /// </summary>
         public void Unload()
         {
-            currentScreen?.Unload();
+            CurrentScreen?.Unload();
         }
 
         /// <summary>
@@ -136,7 +148,7 @@ namespace KaufmanTouhou
         /// </summary>
         public void Update(GameTime gameTime)
         {
-            currentScreen?.Update(gameTime);
+            CurrentScreen?.Update(gameTime);
         }
 
         /// <summary>
@@ -144,7 +156,7 @@ namespace KaufmanTouhou
         /// </summary>
         public void Draw(SpriteBatch spriteBatch, GraphicsDevice graphics)
         {
-            currentScreen?.Draw(spriteBatch, graphics);
+            CurrentScreen?.Draw(spriteBatch, graphics);
         }
 
     }

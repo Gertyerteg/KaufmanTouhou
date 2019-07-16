@@ -51,7 +51,13 @@ namespace KaufmanTouhou.Sprites
         /// <param name="spriteBatch"></param>
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Texture, GetDrawRectangle(), null, Color, Rotation, Origin, SpriteEffects.None, 0f);
+            Rectangle rect = GetDrawRectangle();
+            //int border = 1;
+            //spriteBatch.Draw(Texture, new Rectangle(rect.X - border, rect.Y - border, rect.Width, rect.Height), null, Color.White, Rotation, Origin, SpriteEffects.None, 0f);
+            //spriteBatch.Draw(Texture, new Rectangle(rect.X + border, rect.Y - border, rect.Width, rect.Height), null, Color.White, Rotation, Origin, SpriteEffects.None, 0f);
+            //spriteBatch.Draw(Texture, new Rectangle(rect.X - border, rect.Y + border, rect.Width, rect.Height), null, Color.White, Rotation, Origin, SpriteEffects.None, 0f);
+            //spriteBatch.Draw(Texture, new Rectangle(rect.X + border, rect.Y + border, rect.Width, rect.Height), null, Color.White, Rotation, Origin, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture, rect, null, Color, Rotation, Origin, SpriteEffects.None, 0f);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,10 @@ namespace KaufmanTouhou.Sprites
 {
     class SpinnerBoss : Enemy
     {
-        private float stageTimer, bulletTimer, vortexSpawnTimer;
-        public Texture2D Blank, vortexEnemyTexture;
+        private float stageTimer, bulletTimer, vortexSpawnTimer, sinSpawner, sinSpawner2;
         public readonly int MAX_HEALTH;
+        private Texture2D vortexEnemyTexture, Blank;
+        private float opacity;
 
         /// <summary>
         /// Creates a new instance of the test boss.
@@ -21,8 +23,14 @@ namespace KaufmanTouhou.Sprites
         /// <param name="players"></param>
         public SpinnerBoss(Player[] players, int health) : base(players)
         {
+            opacity = 0f;
+            ContentManager Content = CurrentStage.Content;
             MAX_HEALTH = health;
             Health = MAX_HEALTH;
+            BulletTexture = Blank = Content.Load<Texture2D>("Blank");
+            Texture = Content.Load<Texture2D>("FidgetBoss");
+            vortexEnemyTexture = Content.Load<Texture2D>("Vortext");
+            Size = new Point(Texture.Width * 8, Texture.Height * 8);
         }
 
         /// <summary>
@@ -34,45 +42,52 @@ namespace KaufmanTouhou.Sprites
             float dt = (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             stageTimer += dt;
             bulletTimer += dt;
+            sinSpawner -= dt;
+            sinSpawner2 -= dt;
             float theta = stageTimer / 1000f;
             //Velocity = new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta)) * 100f;
 
-            if (bulletTimer > 500f)
+            if (bulletTimer > 300f)
             {
                 bulletTimer = 0f;
                 for (int i = 0; i < 4; i++)
                 {
                     Player p = GetPlayer(i);
 
-                    if (p != null)
+                    if (p == null)
                     {
-                        float angle = GetAngleBetweenSprite(p);
-                        Vector2 vel = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 500f;
-                        LinearBullet b = new LinearBullet(EntitySide.ENEMY, 7000f, vel)
-                        {
-                            Texture = BulletTexture,
-                            Position = Position,
-                            Size = new Point(15, 8),
-                            Color = Color.YellowGreen,
-                        };
-
-                        CurrentStage.AddBullet(b);
+                        p = CurrentStage.GetRandomPlayer();
                     }
+
+                    float rot = MathHelper.PiOver2 * i + Rotation;
+                    Vector2 offset = new Vector2((float)(Math.Cos(rot)), (float)(Math.Sin(rot))) * 220f;
+                    Vector2 pos = Position + offset;
+                    float angle = GetAngleBetweenSprite(p, pos);
+                    Vector2 vel = new Vector2((float)Math.Cos(angle), (float)Math.Sin(angle)) * 800f;
+                    LinearBullet b = new LinearBullet(EntitySide.ENEMY, 7000f, vel)
+                    {
+                        Texture = BulletTexture,
+                        Position = pos,
+                        Size = new Point(18, 8),
+                        Color = Color.OrangeRed,
+                    };
+
+                    CurrentStage.AddBullet(b);
                 }
             }
             vortexSpawnTimer -= dt;
-            if ((float)(Health) / MAX_HEALTH < 0.5f && vortexSpawnTimer <= 0)
+            if ((float)(Health) / MAX_HEALTH < 0.75f && vortexSpawnTimer <= 0)
             {
-                vortexSpawnTimer = 3000f;
+                vortexSpawnTimer = 2500f;
                 int Swidth = ScreenManager.GetInstance().Width;
-                int Sheight = ScreenManager.GetInstance().Height;
+                int Sheight = ScreenManager.GetInstance().Height + 200;
                 VortexEnemy en = new VortexEnemy(CurrentStage.Players, 4, 4000f, 10000f)
                 {
                     Velocity = new Vector2(0, -200f),
                     Position = new Vector2(200, Sheight),
                     Texture = vortexEnemyTexture,
                     BulletTexture = Blank,
-                    Size = new Point(vortexEnemyTexture.Width * SCALE, vortexEnemyTexture.Height * SCALE),
+                    Size = new Point(vortexEnemyTexture.Width * 3, vortexEnemyTexture.Height * 3),
                 };
                 VortexEnemy en2 = new VortexEnemy(CurrentStage.Players, 4, 4000f, 10000f)
                 {
@@ -80,12 +95,27 @@ namespace KaufmanTouhou.Sprites
                     Position = new Vector2(Swidth - 200, Sheight),
                     Texture = vortexEnemyTexture,
                     BulletTexture = Blank,
-                    Size = new Point(vortexEnemyTexture.Width * SCALE, vortexEnemyTexture.Height * SCALE),
+                    Size = new Point(vortexEnemyTexture.Width * 3, vortexEnemyTexture.Height * 3),
                 };
-                en.SetBullets(Bullets);
-                en2.SetBullets(Bullets);
                 CurrentStage.AddEnemy(en);
                 CurrentStage.AddEnemy(en2);
+            }
+
+            if ((float)Health / MAX_HEALTH < 0.5f && sinSpawner <= 0)
+            {
+                sinSpawner = 1750f;
+                CurrentStage.SpawnSinEnemy(new Vector2(ScreenManager.GetInstance().Width + 100, 300), false);
+            }
+
+            if ((float)Health / MAX_HEALTH <= 0.3f && sinSpawner2 <= 0)
+            {
+                sinSpawner2 = 1750f;
+                CurrentStage.SpawnInvisSinEnemy(new Vector2(-100, 300), true);
+            }
+
+            if (opacity < 1)
+            {
+                opacity += (float)gameTime.ElapsedGameTime.TotalSeconds / 3;
             }
 
 
@@ -96,6 +126,7 @@ namespace KaufmanTouhou.Sprites
             int height = ScreenManager.GetInstance().Height;
             Position = new Vector2((float)(Math.Cos(theta) + 1) / 2 * width * 0.75f + 0.125f * width,
                 (float)(Math.Sin(theta) + 1) / 2 * height / 4 + 200);
+            Rotation += dt / 3000 * MathHelper.TwoPi;
             base.Update(gameTime);
         }
 
@@ -107,7 +138,7 @@ namespace KaufmanTouhou.Sprites
         {
             base.Draw(spriteBatch);
             Rectangle drawRect = new Rectangle(Position.ToPoint(), Size);
-            spriteBatch.Draw(Texture, drawRect, null, Color.White * 0.98f, 0f, Origin, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture, drawRect, null, Color.White * opacity, Rotation, Origin, SpriteEffects.None, 0f);
 
             // draws the health bar
             float prog = (float)(Health) / MAX_HEALTH;

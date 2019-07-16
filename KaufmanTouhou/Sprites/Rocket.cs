@@ -15,6 +15,15 @@ namespace KaufmanTouhou.Sprites
         private List<Sprite> sprites;
         private Sprite target;
 
+        /// <summary>
+        /// The texture of the explosion
+        /// </summary>
+        public Texture2D Explosion
+        {
+            get;
+            set;
+        }
+
         public bool IsActive
         {
             get;
@@ -40,15 +49,15 @@ namespace KaufmanTouhou.Sprites
             this.launch = launch;
             this.impact = impact;
 
-            RADIUS = 70f;
+            RADIUS = 40f;
             this.blank = blank;
             sprites = s;
             IsActive = true;
             Rotation = MathHelper.PiOver2;
 
             launch.Play();
-
         }
+
         private const float SAFE_MULT = 1f;
         /// <summary>
         /// Updates the logic of the Rocket.
@@ -57,7 +66,7 @@ namespace KaufmanTouhou.Sprites
         public virtual void Update(GameTime gameTime)
         {
             Rotation = getAngleToNearestTarget();
-            if (explosionTimer > 1500f)
+            if (explosionTimer > 400f)
                 IsActive = false;
             if (IsExploded)
             {
@@ -83,7 +92,7 @@ namespace KaufmanTouhou.Sprites
                         float playerMag = RADIUS;
                         if (sDist < (mag + playerMag) * SAFE_MULT)
                         {
-                            s.Health -= 3;
+                            s.Health -= 1;
                             return;
                         }
                     }
@@ -146,14 +155,18 @@ namespace KaufmanTouhou.Sprites
             Rectangle drawRect = new Rectangle(p.X, p.Y, Size.X, Size.Y);
             if (IsExploded && IsActive)
             {
-                float prog = explosionTimer / 1500f;
-                spriteBatch.Draw(blank, new Rectangle(p.X, p.Y, (int)(2 * RADIUS), (int)(2 * RADIUS)),
-                    null, Color.White * 0.8f, -prog * MathHelper.Pi / 15f, new Vector2(0.5f, 0.5f), SpriteEffects.None, 0f);
-                spriteBatch.Draw(blank, new Rectangle(p.X, p.Y, (int)(2 * RADIUS), (int)(2 * RADIUS)),
-                    null, Color.White * 0.8f, MathHelper.PiOver4 + prog * MathHelper.Pi / 10f, 
-                    new Vector2(0.5f, 0.5f), SpriteEffects.None, 0f);
+                //float prog = explosionTimer / 800f;
+                //spriteBatch.Draw(blank, new Rectangle(p.X, p.Y, (int)(2 * RADIUS), (int)(2 * RADIUS)),
+                //    null, Color.White * 0.8f, -prog * MathHelper.Pi / 15f, new Vector2(0.5f, 0.5f), SpriteEffects.None, 0f);
+                //spriteBatch.Draw(blank, new Rectangle(p.X, p.Y, (int)(2 * RADIUS), (int)(2 * RADIUS)),
+                //    null, Color.White * 0.8f, MathHelper.PiOver4 + prog * MathHelper.Pi / 10f,
+                //    new Vector2(0.5f, 0.5f), SpriteEffects.None, 0f);
+                int frame = (int)(explosionTimer / 400f * 5);
+                Rectangle sourceRect = new Rectangle(12 * frame, 0, 12, 12);
+                Rectangle dRect = new Rectangle(p.X, p.Y, (int)(3 * RADIUS), (int)(3 * RADIUS));
+                spriteBatch.Draw(Explosion, dRect, sourceRect, Color.White, 0f, new Vector2(Explosion.Width / 10f, Explosion.Height / 10f), SpriteEffects.None, 0f);
             }
-            else
+            else if (!IsExploded)
             {
                 spriteBatch.Draw(Texture, drawRect, null, Color, Rotation, Origin, SpriteEffects.None, 0f);
             }

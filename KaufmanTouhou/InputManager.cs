@@ -85,7 +85,7 @@ namespace KaufmanTouhou
         /// <returns></returns>
         public bool IsButtonPressed(Buttons b, int index)
         {
-            return currentGPState[index].IsButtonDown(b) && prevGPState[index].IsButtonUp(b);
+            return currentGPState[index].IsButtonUp(b) && prevGPState[index].IsButtonDown(b);
         } 
 
         /// <summary>

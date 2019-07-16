@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using KaufmanTouhou.Screens;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using static KaufmanTouhou.Sprites.Bullet;
@@ -14,7 +15,7 @@ namespace KaufmanTouhou.Sprites
     /// </summary>
     public class CorruptedSunBoss : Enemy
     {
-        private float stageTimer, bulletTimer, sunBeamChargeTimer, sunBeamTimer, sunBeamSafeTimer;
+        private float stageTimer, bulletTimer, sunBeamChargeTimer, sunBeamTimer, sunBeamSafeTimer, sunSpawnTimer;
         private Random rand;
         public Texture2D Blank, vortexEnemyTexture, sunBullet;
         public readonly int MAX_HEALTH;
@@ -50,7 +51,7 @@ namespace KaufmanTouhou.Sprites
             float theta = stageTimer / 1000f;
             //Velocity = new Vector2((float)Math.Cos(theta), (float)Math.Sin(theta)) * 100f;
 
-            if (sunBeamSafeTimer < 0)
+            if (sunBeamSafeTimer < 0 && stageTimer > 5000f)
             {
                 sunBeamChargeTimer -= dt;
 
@@ -85,7 +86,34 @@ namespace KaufmanTouhou.Sprites
                 }
             }
 
-            if (bulletTimer > 500f)
+            if (stageTimer > 12000f)
+            {
+                sunSpawnTimer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+
+                if (sunSpawnTimer > 5000)
+                {
+                    sunSpawnTimer = 0f;
+                    int rad = 100;
+
+                    for (int i = 0; i < CurrentStage.GetPlayerCount(); i++)
+                    {
+                        Vector2 newPos = new Vector2(Position.X + rand.Next(-rad, rad), Position.Y + rand.Next(-rad, rad));
+
+                        MiniSun s = new MiniSun(Players)
+                        {
+                            BulletTexture = sunBullet,
+                            Position = newPos,
+                            Health = 3,
+                            Color = Color.White,
+                            Texture = Texture,
+                            Size = new Point(Texture.Width * SCALE / 3, Texture.Height * SCALE / 3),
+                        };
+                        CurrentStage.AddEnemy(s);
+                    }
+                }
+            }
+
+            if (bulletTimer > 400f)
             {
                 bulletTimer = 0f;
                 for (int i = 0; i < 4; i++)
@@ -129,7 +157,7 @@ namespace KaufmanTouhou.Sprites
             base.Draw(spriteBatch);
             Rectangle drawRect = new Rectangle(Position.ToPoint(), Size);
             spriteBatch.Draw(Texture, drawRect, null, Color.White * 0.98f, 0f, Origin, SpriteEffects.None, 0f);
-            if (sunBeamSafeTimer <= 0)
+            if (sunBeamSafeTimer <= 0 && stageTimer > 5000f)
             {
                 float opacity = (float)(-Math.Cos(sunBeamSafeTimer / 900f) + 1) / 2 * 0.8f;
                 int sWidth = ScreenManager.GetInstance().Width;

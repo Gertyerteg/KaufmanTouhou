@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 
 namespace KaufmanTouhou
 {
@@ -45,6 +46,7 @@ namespace KaufmanTouhou
             spriteBatch = new SpriteBatch(GraphicsDevice);
             
             ScreenManager.GetInstance().Initialize(Content, graphics, Window);
+            MediaPlayer.Volume = 0.1f;
         }
 
         /// <summary>

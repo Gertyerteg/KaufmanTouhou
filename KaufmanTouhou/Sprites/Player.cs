@@ -26,10 +26,13 @@ namespace KaufmanTouhou.Sprites
     public class Player : Sprite
     {
         private PlayerIndex index;
-        private List<Bullet> bullets;
+        private List<Bullet> bullets
+        {
+            get { return CurrentStage.Bullets; }
+        }
         public SoundEffect rocketLaunch, rocketImpact, shootSound;
         private List<SoundEffect> hurtSounds;
-        public Texture2D BulletTexture, RocketTexture, pointerTexture, blank;
+        public Texture2D BulletTexture, RocketTexture, pointerTexture, blank, Explosion;
         private float bulletTimer, shieldTimer, rocketTimer, shieldRechargeTimer, invulnTimer;
         private bool shieldActive
         {
@@ -54,7 +57,7 @@ namespace KaufmanTouhou.Sprites
             hurtSounds = hurtEffects;
             this.blank = blank;
             this.index = index;
-            Health = 30;
+            Health = 0;
             invulnTimer = 0f;
             this.pointerTexture = pointerTexture;
 
@@ -74,12 +77,6 @@ namespace KaufmanTouhou.Sprites
                     break;
             }
         }
-
-        public void SetBullets(List<Bullet> bullets)
-        {
-            this.bullets = bullets;
-        }
-
         public void SetRockets(List<Rocket> rockets)
         {
             this.rockets = rockets;
@@ -152,7 +149,7 @@ namespace KaufmanTouhou.Sprites
             if (bulletTimer > 450f && (im.IsButtonDown(Buttons.RightTrigger, (int)index) 
                 || (ScreenManager.DEV_MODE && im.KeyDown(Keys.Space))))
             {
-                int shootFx = rand.Next(0, 3);
+                //int shootFx = rand.Next(0, 3);
 
                 shootSound.Play(1f, 0f, 0f);
                 bulletTimer = 0;
@@ -164,17 +161,17 @@ namespace KaufmanTouhou.Sprites
                 b.Size = new Point(8, 7);
                 b.Position = Position;
                 b.InitVelocity = offsetVel;
-                b.Color = Color.Blue;
+                b.Color = Color.SkyBlue;
                 b2.Texture = BulletTexture;
                 b2.Size = new Point(8, 7);
                 b2.InitVelocity = offsetVel;
                 b2.Position = Position;
-                b2.Color = Color.Blue;
+                b2.Color = Color.SkyBlue;
                 b3.Texture = BulletTexture;
                 b3.InitVelocity = offsetVel;
                 b3.Size = new Point(8, 8);
                 b3.Position = Position;
-                b3.Color = Color.Blue;
+                b3.Color = Color.SkyBlue;
 
                 bullets.Add(b);
                 bullets.Add(b2);
@@ -183,12 +180,13 @@ namespace KaufmanTouhou.Sprites
             // Fire rocket
             if (im.IsButtonDown(Buttons.LeftTrigger, (int)index) && rocketTimer < 0)
             {
-                rocketTimer = 1500f;
+                rocketTimer = 900f;
                 List<Sprite> sprites = new List<Sprite>();
                 sprites.AddRange(GameScreen.CurrentStage.Enemies);
                 Rocket r = new Rocket(sprites, blank, rocketLaunch, rocketImpact)
                 {
                     Texture = RocketTexture,
+                    Explosion = Explosion,
                     Color = Color.White,
                     Position = Position,
                     Size = new Point(RocketTexture.Width, RocketTexture.Height),
@@ -202,7 +200,11 @@ namespace KaufmanTouhou.Sprites
             UpdatePosition(gameTime);
         }
 
-        private const float SAFE_MULT = 0.25f;
+        private const float SAFE_MULT = 0.18f;
+
+        /// <summary>
+        /// Checks the list of bullets for bullet collision.
+        /// </summary>
         public void CheckBulletCollision()
         {
             for (int i = 0; i < bullets.Count; i++)

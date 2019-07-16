@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,14 @@ namespace KaufmanTouhou.Screens
         public List<Enemy> Enemies;
         public List<Bullet> Bullets;
         public List<Rocket> Rockets;
+        public List<Dialogue> Dialogues;
+        public Dialogue CurrentDialogue;
+        private List<Explosion> explosions;
+        public float StageTimer;
+        public int StageNumber;
+        private Texture2D blank, sinEnemyTexture, vortexTexture, explosionTexture;
+        private Random rand;
+        public SpriteFont tFont;
 
         /// <summary>
         /// Creates a new instance of the <c>Stage</c>.
@@ -37,16 +46,39 @@ namespace KaufmanTouhou.Screens
         /// <param name="content"></param>
         public Stage(ContentManager content, Player[] players)
         {
+            rand = new Random();
             Players = players;
             Content = new ContentManager(content.ServiceProvider, "Content");
+            tFont = content.Load<SpriteFont>("TransitionFont");
             Bullets = new List<Bullet>();
             Enemies = new List<Enemy>();
             Rockets = new List<Rocket>();
+            explosions = new List<Explosion>();
+
+            blank = content.Load<Texture2D>("Blank");
+            sinEnemyTexture = content.Load<Texture2D>("Enemy");
+            vortexTexture = content.Load<Texture2D>("Vortex");
+            explosionTexture = content.Load<Texture2D>("Explosion");
+        }
+
+        public void AddExplosion(Explosion e)
+        {
+            explosions.Add(e);
         }
 
         public void AddRocket(Rocket r)
         {
             Rockets.Add(r);
+        }
+
+        /// <summary>
+        /// Sets the stage of the game.
+        /// </summary>
+        /// <param name="stage"></param>
+        public void SetStage(int stage)
+        {
+            StageNumber = stage;
+            StageTimer = 0;
         }
 
         public void AddEnemy(Enemy e)
@@ -79,6 +111,16 @@ namespace KaufmanTouhou.Screens
             return GetPlayer((int)index);
         }
 
+        public Player GetRandomPlayer()
+        {
+            Player p = GetPlayer(rand.Next(0, 4));
+
+            if (p == null)
+                return GetRandomPlayer();
+
+            return p;
+        }
+
         /// <summary>
         /// Indicates whether the stage is finished.
         /// </summary>
@@ -102,6 +144,54 @@ namespace KaufmanTouhou.Screens
         public virtual void Unload()
         {
             Content.Unload();
+        }
+
+        /// <summary>
+        /// Spawns a sinpathenemy
+        /// </summary>
+        public void SpawnSinEnemy(Vector2 initialPosition, bool goingRight)
+        {
+            SinPathEnemy e = new SinPathEnemy(Players, goingRight)
+            {
+                Position = initialPosition,
+                BulletTexture = blank,
+                Texture = sinEnemyTexture,
+                Color = Color.White,
+                Size = new Point(sinEnemyTexture.Width * Sprite.SCALE, sinEnemyTexture.Height * Sprite.SCALE),
+            };
+            AddEnemy(e);
+
+        }
+
+        public void SpawnVortexEnemy(Vector2 initialPosition, Vector2 velocity, float ttl)
+        {
+            VortexEnemy en = new VortexEnemy(Players, 4, 3000f, ttl)
+            {
+                Texture = vortexTexture,
+                Position = initialPosition,
+                Velocity = velocity,
+                Health = 6,
+                Size = new Point(vortexTexture.Width * Sprite.SCALE / 2, vortexTexture.Height * Sprite.SCALE / 2),
+                BulletTexture = blank,
+            };
+            Enemies.Add(en);
+        }
+
+        /// <summary>
+        /// Spawns a sinpathenemy
+        /// </summary>
+        public void SpawnInvisSinEnemy(Vector2 initialPosition, bool goingRight)
+        {
+            InvisSinEnemy e = new InvisSinEnemy(Players, goingRight)
+            {
+                Position = initialPosition,
+                BulletTexture = blank,
+                Texture = sinEnemyTexture,
+                Color = Color.White,
+                Size = new Point(sinEnemyTexture.Width * Sprite.SCALE, sinEnemyTexture.Height * Sprite.SCALE),
+            };
+            AddEnemy(e);
+
         }
 
         /// <summary>
@@ -152,6 +242,16 @@ namespace KaufmanTouhou.Screens
                     Rockets[i].Update(gameTime);
             }
 
+            for (int i = 0; i < explosions.Count; i++)
+            {
+                if (!explosions[i].IsActive)
+                {
+                    explosions.RemoveAt(i--);
+                }
+                else
+                    explosions[i].Update(gameTime);
+            }
+
             for (int i = 0; i < Enemies.Count; i++)
             {
                 if (Enemies[i].IsActive)
@@ -159,8 +259,18 @@ namespace KaufmanTouhou.Screens
                     Enemies[i].Update(gameTime);
                 }
                 else
+                {
+                    Explosion e = new Explosion(400f)
+                    {
+                        Texture = explosionTexture,
+                        Position = Enemies[i].Position,
+                        Size = new Point(80, 80),
+                    };
+                    AddExplosion(e);
                     Enemies.RemoveAt(i--);
+                }
             }
+
 
         }
 
@@ -169,7 +279,10 @@ namespace KaufmanTouhou.Screens
         /// </summary>
         public virtual void Pause()
         {
-
+            if (MediaPlayer.State == MediaState.Playing)
+                MediaPlayer.Pause();
+            else if (MediaPlayer.State == MediaState.Paused)
+                MediaPlayer.Resume();
         }
 
         /// <summary>
@@ -194,6 +307,35 @@ namespace KaufmanTouhou.Screens
             for (int i = 0; i < Rockets.Count; i++)
             {
                 Rockets[i].Draw(spriteBatch);
+            }
+
+            for (int i = 0; i < explosions.Count; i++)
+            {
+                explosions[i].Draw(spriteBatch);
+            }
+        }
+
+        public void DrawSplash(SpriteBatch spriteBatch, string text)
+        {
+            float textHeight = tFont.MeasureString("H").Y;
+
+            float opacity = 1f;
+            if (StageTimer < 600f)
+            {
+                opacity = StageTimer / 600f;
+            }
+            else if (StageTimer > 4400f)
+            {
+                opacity = (5000f - StageTimer) / 600f;
+            }
+
+            spriteBatch.Draw(blank, new Rectangle(ScreenManager.GetInstance().Width / 2, ScreenManager.GetInstance().Height / 2, ScreenManager.GetInstance().Width, 400)
+                , null, Color.Green * opacity * 0.8f, 0f, new Vector2(0.5f, 0.5f), SpriteEffects.None, 0f);
+            if (opacity == 1)
+            {
+                spriteBatch.DrawString(tFont, text, new Vector2(300 + 700 * StageTimer / 5000f,
+                    ScreenManager.GetInstance().Height / 2 - textHeight / 2), Color.White, 0f, new Vector2(0, 0),
+                    1f, SpriteEffects.None, 0f);
             }
         }
     }

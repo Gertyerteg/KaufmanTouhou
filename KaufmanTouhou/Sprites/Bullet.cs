@@ -26,7 +26,8 @@ namespace KaufmanTouhou.Sprites
         /// </summary>
         public bool IsActive
         {
-            get { return TTL > 0; }
+            get;
+            set;
         }
 
         public EntitySide Side
@@ -51,6 +52,7 @@ namespace KaufmanTouhou.Sprites
             Side = side;
             TTL = ttl;
             InitVelocity = Vector2.Zero;
+            IsActive = true;
         }
 
 
@@ -62,6 +64,9 @@ namespace KaufmanTouhou.Sprites
         {
             TTL -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             Position += InitVelocity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (TTL < 0)
+                IsActive = false;
         }
 
         /// <summary>

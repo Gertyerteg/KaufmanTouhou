@@ -23,6 +23,7 @@ namespace KaufmanTouhou.Sprites
         {
             rand = new Random();
             Health = 3;
+            gunTimer = rand.Next(0, 2000);
             isGoingRight = goingRight;
         }
 
@@ -44,15 +45,15 @@ namespace KaufmanTouhou.Sprites
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            gunTimer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+            gunTimer -= (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             pathTimer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
             float x = (isGoingRight) ? 1 : -1;
             Velocity = new Vector2(x * 2, (float)Math.Sin(pathTimer / 500));
             Rotation = GetAngleBetweenSprite(GetNearestPlayer());
 
-            if (gunTimer > 1500f)
+            if (gunTimer < 0)
             {
-                gunTimer = 0f;
+                gunTimer = 500f + rand.Next(0, 1500);
 
                 // shoot
                 float angle = Rotation + (float)rand.NextDouble() * 0.4f - 0.2f;
