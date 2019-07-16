@@ -142,7 +142,6 @@
     <None Include="Content\TransitionFont.spritefont" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Content\Adventure.mp3" />
     <Content Include="Content\Asteroid0.png" />
     <Content Include="Content\Asteroid1.png" />
     <Content Include="Content\Asteroid2.png" />
